@@ -1,86 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>GitHub CSV WDC</title>
   <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js"></script>
 </head>
 <body>
-  <h3>GitHub CSV Web Data Connector</h3>
-  <input type="text" id="csvUrl" placeholder="https://raw.githubusercontent.com/dnccinnovationlab/dengue-dashboard/refs/heads/main/daily_dengue_dghs.csv" size="80" />
-  <button onclick="submitConnector()">Get Data</button>
 
-  <script>
-    // Define connector object
-    const myConnector = tableau.makeConnector();
+<script>
+(function() {
+    var myConnector = tableau.makeConnector();
 
     myConnector.getSchema = function(schemaCallback) {
-      // Define schema for your data columns here
-      const cols = [
-        { id: "date", dataType: tableau.dataTypeEnum.date },
-        { id: "admitted", dataType: tableau.dataTypeEnum.int },
-        { id: "death", dataType: tableau.dataTypeEnum.int },
-        { id: "dncc_case", dataType: tableau.dataTypeEnum.int },
-        { id: "dncc_death", dataType: tableau.dataTypeEnum.int },
-        { id: "dscc_case", dataType: tableau.dataTypeEnum.int },
-        { id: "dscc_death", dataType: tableau.dataTypeEnum.int },
-        { id: "dhaka_case", dataType: tableau.dataTypeEnum.int },
-        { id: "dhaka_death", dataType: tableau.dataTypeEnum.int }
+        var cols = [
+            { id: "date", dataType: tableau.dataTypeEnum.date },
+            { id: "affected", dataType: tableau.dataTypeEnum.int },
+            { id: "death", dataType: tableau.dataTypeEnum.int },
+            { id: "dncc_case", dataType: tableau.dataTypeEnum.int },
+            { id: "dncc_death", dataType: tableau.dataTypeEnum.int },
+            { id: "dscc_case", dataType: tableau.dataTypeEnum.int },
+            { id: "dscc_death", dataType: tableau.dataTypeEnum.int },
+            { id: "dhaka_case", dataType: tableau.dataTypeEnum.int },
+            { id: "dhaka_death", dataType: tableau.dataTypeEnum.int }
+        ];
 
-        // add other columns matching your CSV
-      ];
+        var tableSchema = {
+            id: "dengue_dghs_data",
+            alias: "DGHS Dengue Dashboard CSV",
+            columns: cols
+        };
 
-      const tableSchema = {
-        id: "dengueData",
-        alias: "Dengue Data from GitHub CSV",
-        columns: cols
-      };
-
-      schemaCallback([tableSchema]);
+        schemaCallback([tableSchema]);
     };
 
     myConnector.getData = function(table, doneCallback) {
-      const csvUrl = tableau.connectionData;
-      
-      fetch(csvUrl)
-        .then(response => response.text())
-        .then(text => {
-          // Simple CSV parse - assuming comma separated, no quotes
-          const lines = text.split("\n");
-          const data = [];
+        var url = "https://raw.githubusercontent.com/dnccinnovationlab/dengue-dashboard/refs/heads/main/daily_dengue_dghs.csv";
 
-          for(let i = 1; i < lines.length; i++) {
-            const row = lines[i].split(",");
-            if(row.length >= 3) {
-              data.push({
-                "date": row[0],
-                "admitted": parseInt(row[1], 10),
-                "death": parseInt(row[2], 10),
-                "dncc_case": parseInt(row[3], 10),
-                "dncc_death": parseInt(row[4], 10),
-                "dscc_case": parseInt(row[5], 10),
-                "dscc_death": parseInt(row[6], 10),
-                "dhaka_case": parseInt(row[7], 10),
-                "dehaka_death": parseInt(row[8], 10)
-              });
-            }
-          }
-          table.appendRows(data);
-          doneCallback();
-        });
+        fetch(url)
+            .then(res => res.text())
+            .then(text => {
+                var rows = tableau.csvToTable(text);
+                table.appendRows(rows);
+                doneCallback();
+            });
     };
 
     tableau.registerConnector(myConnector);
+})();
+</script>
 
-    function submitConnector() {
-      const urlInput = document.getElementById("csvUrl").value.trim();
-      if(!urlInput) {
-        alert("Please enter a GitHub raw CSV URL");
-        return;
-      }
-      tableau.connectionName = "Dengue Data from GitHub CSV"; // name for data source
-      tableau.connectionData = urlInput; // pass URL to connector
-      tableau.submit(); // send to Tableau
-    }
-  </script>
+<h2>DGHS Dengue Data</h2>
+<button onclick="tableau.connectionName='DGHS CSV'; tableau.submit();">
+    Load Data
+</button>
+
 </body>
 </html>
