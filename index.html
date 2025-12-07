@@ -13,7 +13,7 @@
     // --- 1. Schema ---
     myConnector.getSchema = function(schemaCallback) {
         var cols = [
-            { id: "date", dataType: tableau.dataTypeEnum.string },
+            { id: "date", dataType: tableau.dataTypeEnum.date },
             { id: "affected", dataType: tableau.dataTypeEnum.int },
             { id: "death", dataType: tableau.dataTypeEnum.int },
             { id: "dncc_case", dataType: tableau.dataTypeEnum.int },
