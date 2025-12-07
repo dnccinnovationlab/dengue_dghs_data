@@ -7,11 +7,13 @@
 
 <script>
 (function() {
+
     var myConnector = tableau.makeConnector();
 
+    // --- 1. Schema ---
     myConnector.getSchema = function(schemaCallback) {
         var cols = [
-            { id: "date", dataType: tableau.dataTypeEnum.date },
+            { id: "date", dataType: tableau.dataTypeEnum.string },
             { id: "affected", dataType: tableau.dataTypeEnum.int },
             { id: "death", dataType: tableau.dataTypeEnum.int },
             { id: "dncc_case", dataType: tableau.dataTypeEnum.int },
@@ -22,34 +24,53 @@
             { id: "dhaka_death", dataType: tableau.dataTypeEnum.int }
         ];
 
-        var tableSchema = {
+        schemaCallback([{
             id: "dengue_dghs_data",
             alias: "DGHS Dengue Dashboard CSV",
             columns: cols
-        };
-
-        schemaCallback([tableSchema]);
+        }]);
     };
 
+    // --- 2. Data Fetch ---
     myConnector.getData = function(table, doneCallback) {
-        var url = "https://raw.githubusercontent.com/dnccinnovationlab/dengue-dashboard/refs/heads/main/daily_dengue_dghs.csv";
+        var url = "https://raw.githubusercontent.com/dnccinnovationlab/dengue-dashboard/main/daily_dengue_dghs.csv";
 
         fetch(url)
             .then(res => res.text())
             .then(text => {
-                var rows = tableau.csvToTable(text);
+
+                // Convert CSV to rows
+                var lines = text.trim().split("\n");
+                var headers = lines[0].split(",");
+
+                var rows = lines.slice(1).map(line => {
+                    var values = line.split(",");
+                    return {
+                        date: values[0],
+                        affected: +values[1],
+                        death: +values[2],
+                        dncc_case: +values[3],
+                        dncc_death: +values[4],
+                        dscc_case: +values[5],
+                        dscc_death: +values[6],
+                        dhaka_case: +values[7],
+                        dhaka_death: +values[8]
+                    };
+                });
+
                 table.appendRows(rows);
                 doneCallback();
             });
     };
 
     tableau.registerConnector(myConnector);
+
 })();
 </script>
 
 <h2>DGHS Dengue Data</h2>
-<button onclick="tableau.connectionName='DGHS CSV'; tableau.submit();">
-    Load Data
+<button onclick="tableau.connectionName = 'DGHS CSV'; tableau.submit();">
+  Load Data
 </button>
 
 </body>
